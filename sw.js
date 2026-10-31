@@ -4,7 +4,7 @@
  * Enables complete offline gameplay, asset pre-caching, and instant standalone launching.
  */
 
-const CACHE_NAME = '2048-deluxe-v2.3';
+const CACHE_NAME = '2048-deluxe-v2.4';
 
 const STATIC_ASSETS = [
   './',

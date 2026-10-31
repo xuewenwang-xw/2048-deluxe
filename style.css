@@ -846,14 +846,25 @@ body {
 }
 
 /* ==========================================================================
-   11. On-Screen Virtual D-Pad for Mouse, Mobile & Accessibility
+   11. Dual Controls Dock: On-Screen D-Pad & Virtual Joystick (Side-by-Side)
    ========================================================================== */
+.controls-dock {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(14px, 4vw, 28px);
+  margin-top: 4px;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: all 250ms ease;
+}
+
 .dpad-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  margin-top: 4px;
+  gap: 5px;
   user-select: none;
   -webkit-user-select: none;
   transition: all 250ms ease;
@@ -881,12 +892,12 @@ body {
 .dpad-horizontal {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
 
 .dpad-btn {
-  width: clamp(44px, 10vw, 52px);
-  height: clamp(44px, 10vw, 52px);
+  width: clamp(42px, 10vw, 50px);
+  height: clamp(42px, 10vw, 50px);
   border: none;
   border-radius: 10px;
   background-color: var(--dpad-bg);
@@ -917,13 +928,116 @@ body {
 }
 
 .dpad-center {
-  width: clamp(28px, 7vw, 36px);
-  height: clamp(28px, 7vw, 36px);
+  width: clamp(26px, 6.5vw, 34px);
+  height: clamp(26px, 6.5vw, 34px);
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0.25;
   font-size: 0.8rem;
+}
+
+/* ==========================================================================
+   11.2 Silky Virtual Joystick Controller
+   ========================================================================== */
+.joystick-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: all 250ms ease;
+}
+
+.joystick-title {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-dark);
+  opacity: 0.75;
+}
+
+.joystick-hints {
+  font-size: 0.72rem;
+  color: var(--text-dark);
+  opacity: 0.7;
+  margin-top: 2px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.joystick-base {
+  position: relative;
+  width: clamp(94px, 24vw, 114px);
+  height: clamp(94px, 24vw, 114px);
+  border-radius: 50%;
+  background-color: var(--dpad-bg);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.22), 0 3px 6px rgba(0, 0, 0, 0.08);
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+  cursor: grab;
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+
+.joystick-base:active {
+  cursor: grabbing;
+}
+
+.joystick-guide {
+  position: absolute;
+  font-size: 0.72rem;
+  font-weight: 900;
+  color: var(--text-dark);
+  opacity: 0.28;
+  pointer-events: none;
+  transition: opacity 120ms ease, transform 120ms ease, color 120ms ease, filter 120ms ease;
+}
+
+.joystick-guide-up { top: 4px; left: 50%; transform: translateX(-50%); }
+.joystick-guide-right { right: 6px; top: 50%; transform: translateY(-50%); }
+.joystick-guide-down { bottom: 4px; left: 50%; transform: translateX(-50%); }
+.joystick-guide-left { left: 6px; top: 50%; transform: translateY(-50%); }
+
+.joystick-guide.active {
+  opacity: 1;
+  color: var(--dpad-active);
+  filter: drop-shadow(0 0 6px var(--dpad-active));
+}
+.joystick-guide-up.active { transform: translateX(-50%) scale(1.4); }
+.joystick-guide-right.active { transform: translateY(-50%) scale(1.4); }
+.joystick-guide-down.active { transform: translateX(-50%) scale(1.4); }
+.joystick-guide-left.active { transform: translateY(-50%) scale(1.4); }
+
+.joystick-stick {
+  position: absolute;
+  width: clamp(44px, 11vw, 52px);
+  height: clamp(44px, 11vw, 52px);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.1) 40%, transparent 70%), var(--btn-primary-bg, #8f7a66);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.26), inset 0 2px 3px rgba(255, 255, 255, 0.35);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  will-change: transform;
+  touch-action: none;
+  z-index: 2;
+}
+
+.joystick-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.38);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
 }
 
 /* Desktop Widescreen Layout: Side-by-side Board & D-Pad (No scroll needed) */
@@ -949,28 +1063,38 @@ body {
     gap: 28px;
   }
 
-  .dpad-container {
+  .controls-dock {
     margin-top: 0;
-    padding: 16px 20px;
+    padding: 12px 18px;
     background: var(--stat-box-bg);
     border-radius: 14px;
     box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08);
-    gap: 8px;
+    gap: 20px;
   }
 
-  .dpad-title {
+  .dpad-container,
+  .joystick-container {
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+    gap: 6px;
+  }
+
+  .dpad-title,
+  .joystick-title {
     color: var(--text-light);
     opacity: 0.85;
   }
 
-  .dpad-hints {
+  .dpad-hints,
+  .joystick-hints {
     color: var(--text-light);
     opacity: 0.8;
   }
 
   .dpad-btn {
-    width: 52px;
-    height: 52px;
+    width: 48px;
+    height: 48px;
   }
 }
 
@@ -1046,22 +1170,43 @@ body {
     min-width: 28px;
   }
 
-  .dpad-title {
+  .controls-dock {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: clamp(10px, 3.5vw, 20px);
+    width: 100%;
+    margin-top: 2px;
+  }
+
+  .dpad-title,
+  .joystick-title {
     display: none;
   }
 
-  .dpad-hints {
+  .dpad-hints,
+  .joystick-hints {
     display: none;
   }
 
   .dpad-btn {
-    width: clamp(38px, 11vw, 46px);
-    height: clamp(38px, 11vw, 46px);
+    width: clamp(36px, 10vw, 42px);
+    height: clamp(36px, 10vw, 42px);
   }
 
   .dpad-center {
-    width: clamp(24px, 6vw, 30px);
-    height: clamp(24px, 6vw, 30px);
+    width: clamp(20px, 5.5vw, 28px);
+    height: clamp(20px, 5.5vw, 28px);
+  }
+
+  .joystick-base {
+    width: clamp(84px, 22vw, 100px);
+    height: clamp(84px, 22vw, 100px);
+  }
+
+  .joystick-stick {
+    width: clamp(38px, 10vw, 46px);
+    height: clamp(38px, 10vw, 46px);
   }
 }
 

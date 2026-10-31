@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>2048 Deluxe — Cyber & Retro Edition</title>
-  <link rel="stylesheet" href="style.css?v=2.2">
+  <link rel="stylesheet" href="style.css?v=2.3">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#faf8ef">
   <meta name="mobile-web-app-capable" content="yes">
@@ -119,18 +119,38 @@
         </div>
       </div>
 
-      <!-- On-Screen Virtual D-Pad for Mouse, Mobile & Accessibility -->
-      <section class="dpad-container" aria-label="Directional Controls">
-        <div class="dpad-title" aria-hidden="true">方向控制</div>
-        <button class="dpad-btn dpad-up" id="dpad-up" aria-label="Move Up" data-direction="UP" title="Move Up (▲ / W)">▲</button>
-        <div class="dpad-horizontal">
-          <button class="dpad-btn dpad-left" id="dpad-left" aria-label="Move Left" data-direction="LEFT" title="Move Left (◀ / A)">◀</button>
-          <div class="dpad-center" aria-hidden="true">●</div>
-          <button class="dpad-btn dpad-right" id="dpad-right" aria-label="Move Right" data-direction="RIGHT" title="Move Right (▶ / D)">▶</button>
+      <!-- Dual Controls Dock: D-Pad & Virtual Joystick side-by-side -->
+      <section class="controls-dock" aria-label="Game Controls Dock">
+        <!-- Left: On-Screen Virtual D-Pad -->
+        <div class="dpad-container" aria-label="Directional Controls">
+          <div class="dpad-title" aria-hidden="true">十字按键</div>
+          <button class="dpad-btn dpad-up" id="dpad-up" aria-label="Move Up" data-direction="UP" title="Move Up (▲ / W)">▲</button>
+          <div class="dpad-horizontal">
+            <button class="dpad-btn dpad-left" id="dpad-left" aria-label="Move Left" data-direction="LEFT" title="Move Left (◀ / A)">◀</button>
+            <div class="dpad-center" aria-hidden="true">●</div>
+            <button class="dpad-btn dpad-right" id="dpad-right" aria-label="Move Right" data-direction="RIGHT" title="Move Right (▶ / D)">▶</button>
+          </div>
+          <button class="dpad-btn dpad-down" id="dpad-down" aria-label="Move Down" data-direction="DOWN" title="Move Down (▼ / S)">▼</button>
+          <div class="dpad-hints" aria-hidden="true">
+            <span class="key-hint">▲▼◀▶</span> <span class="key-hint">WASD</span>
+          </div>
         </div>
-        <button class="dpad-btn dpad-down" id="dpad-down" aria-label="Move Down" data-direction="DOWN" title="Move Down (▼ / S)">▼</button>
-        <div class="dpad-hints" aria-hidden="true">
-          <span class="key-hint">▲▼◀▶</span> <span class="key-hint">WASD</span>
+
+        <!-- Right: Virtual Joystick (并排放置) -->
+        <div class="joystick-container" id="joystick-container" aria-label="Virtual Joystick">
+          <div class="joystick-title" aria-hidden="true">虚拟摇杆</div>
+          <div class="joystick-base" id="joystick-base">
+            <div class="joystick-guide joystick-guide-up" id="joystick-guide-up" aria-hidden="true">▲</div>
+            <div class="joystick-guide joystick-guide-right" id="joystick-guide-right" aria-hidden="true">▶</div>
+            <div class="joystick-guide joystick-guide-down" id="joystick-guide-down" aria-hidden="true">▼</div>
+            <div class="joystick-guide joystick-guide-left" id="joystick-guide-left" aria-hidden="true">◀</div>
+            <div class="joystick-stick" id="joystick-stick">
+              <div class="joystick-thumb"></div>
+            </div>
+          </div>
+          <div class="joystick-hints" aria-hidden="true">
+            <span class="key-hint">滑动手感</span>
+          </div>
         </div>
       </section>
     </main>
@@ -144,7 +164,7 @@
     </footer>
   </div>
 
-  <script type="module" src="src/app.js?v=2.2"></script>
+  <script type="module" src="src/app.js?v=2.3"></script>
   <script>
     if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
       window.addEventListener('load', () => {

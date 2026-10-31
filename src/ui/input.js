@@ -219,6 +219,7 @@ export class InputController {
     window.addEventListener('mouseup', this._boundMouseUp);
 
     this._bindButtonListeners();
+    this._bindJoystick();
   }
 
   /**
@@ -656,6 +657,158 @@ export class InputController {
           themeSelect.blur();
         }
       });
+    }
+  }
+
+  /**
+   * Initializes and binds silky virtual joystick controls.
+   * Handles touch, pointer and mouse dragging with physics, spring back, and directional dispatch.
+   * @private
+   */
+  _bindJoystick() {
+    const doc = this.targetElement && this.targetElement.getElementById
+      ? this.targetElement
+      : (typeof document !== 'undefined' ? document : null);
+    if (!doc) return;
+
+    const stick = doc.getElementById('joystick-stick');
+    const base = doc.getElementById('joystick-base');
+    if (!stick || !base || typeof stick.addEventListener !== 'function') return;
+
+    let isDragging = false;
+    let baseRect = null;
+    let centerX = 0;
+    let centerY = 0;
+    let maxRadius = 36;
+    let triggerRadius = 22;
+    let resetRadius = 10;
+    let triggered = false;
+    let activeDirection = null;
+
+    const guides = {
+      [Direction.UP]: doc.getElementById('joystick-guide-up'),
+      [Direction.RIGHT]: doc.getElementById('joystick-guide-right'),
+      [Direction.DOWN]: doc.getElementById('joystick-guide-down'),
+      [Direction.LEFT]: doc.getElementById('joystick-guide-left'),
+    };
+
+    const clearGuides = () => {
+      Object.values(guides).forEach(g => {
+        if (g && g.classList) g.classList.remove('active');
+      });
+      activeDirection = null;
+    };
+
+    const setGuide = (dir) => {
+      if (activeDirection === dir) return;
+      clearGuides();
+      activeDirection = dir;
+      if (dir && guides[dir] && guides[dir].classList) {
+        guides[dir].classList.add('active');
+      }
+    };
+
+    const onPointerDown = (e) => {
+      if (!this.enabled || (e.button !== undefined && e.button !== 0)) return;
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+
+      if (typeof base.getBoundingClientRect === 'function') {
+        baseRect = base.getBoundingClientRect();
+        centerX = baseRect.left + baseRect.width / 2;
+        centerY = baseRect.top + baseRect.height / 2;
+        maxRadius = Math.max(20, (baseRect.width / 2) * 0.72);
+      } else {
+        centerX = 50;
+        centerY = 50;
+        maxRadius = 35;
+      }
+      triggerRadius = maxRadius * 0.55;
+      resetRadius = maxRadius * 0.25;
+
+      isDragging = true;
+      triggered = false;
+      stick.style.transition = 'none';
+
+      if (typeof stick.setPointerCapture === 'function' && e.pointerId !== undefined) {
+        try {
+          stick.setPointerCapture(e.pointerId);
+        } catch {}
+      }
+
+      onPointerMove(e);
+    };
+
+    const onPointerMove = (e) => {
+      if (!isDragging) return;
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+
+      const dx = (e.clientX || 0) - centerX;
+      const dy = (e.clientY || 0) - centerY;
+      const distance = Math.hypot(dx, dy);
+
+      // Clamp movement within maxRadius circle
+      let clampedX = dx;
+      let clampedY = dy;
+      if (distance > maxRadius && distance > 0) {
+        clampedX = (dx / distance) * maxRadius;
+        clampedY = (dy / distance) * maxRadius;
+      }
+
+      stick.style.transform = `translate3d(${clampedX.toFixed(1)}px, ${clampedY.toFixed(1)}px, 0)`;
+
+      // Direction calculation based on angle
+      if (distance >= triggerRadius) {
+        const rad = Math.atan2(dy, dx);
+        const deg = rad * (180 / Math.PI); // -180 to 180
+
+        let dir = null;
+        if (deg >= -45 && deg <= 45) {
+          dir = Direction.RIGHT;
+        } else if (deg > 45 && deg < 135) {
+          dir = Direction.DOWN;
+        } else if (deg >= -135 && deg < -45) {
+          dir = Direction.UP;
+        } else {
+          dir = Direction.LEFT;
+        }
+
+        setGuide(dir);
+
+        if (!triggered && dir) {
+          triggered = true;
+          this.dispatchMove(dir);
+        }
+      } else {
+        clearGuides();
+        if (distance < resetRadius) {
+          triggered = false;
+        }
+      }
+    };
+
+    const onPointerUp = (e) => {
+      if (!isDragging) return;
+      isDragging = false;
+      triggered = false;
+      clearGuides();
+
+      if (typeof stick.releasePointerCapture === 'function' && e && e.pointerId !== undefined) {
+        try {
+          stick.releasePointerCapture(e.pointerId);
+        } catch {}
+      }
+
+      // Silky spring return to center
+      stick.style.transition = 'transform 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+      stick.style.transform = 'translate3d(0, 0, 0)';
+    };
+
+    stick.addEventListener('pointerdown', onPointerDown);
+    base.addEventListener('pointerdown', onPointerDown);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('pointermove', onPointerMove, { passive: false });
+      window.addEventListener('pointerup', onPointerUp);
+      window.addEventListener('pointercancel', onPointerUp);
     }
   }
 }
