@@ -2,22 +2,23 @@
  * @file sw.js
  * Service Worker for 2048 Deluxe PWA.
  * Enables complete offline gameplay, asset pre-caching, and instant standalone launching.
+ * Features Network-First navigation with automatic update and background asset caching.
  */
 
-const CACHE_NAME = '2048-deluxe-v2.4';
+const CACHE_NAME = '2048-deluxe-v2.5';
 
 const STATIC_ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  './style.css?v=2.2',
-  './src/app.js?v=2.2',
+  './style.css?v=2.5',
+  './src/app.js?v=2.5',
   './src/engine/game_engine.js',
   './src/engine/grid.js',
   './src/engine/prng.js',
   './src/engine/types.js',
   './src/ui/view.js',
-  './src/ui/input.js?v=2.2',
+  './src/ui/input.js?v=2.5',
   './src/ui/theme.js',
   './src/ui/storage.js',
   './src/audio/audio_engine.js',
@@ -64,38 +65,44 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        // Return cached asset immediately; optionally refresh in background
-        fetch(event.request).then((networkResponse) => {
+  // 1. Navigation requests (HTML document loads): Network-First
+  // Ensures online mobile/desktop users always see the latest HTML release immediately.
+  // Falls back to cached HTML if offline or network unreachable.
+  if (event.request.mode === 'navigate' || event.request.destination === 'document') {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
+            const responseClone = networkResponse.clone();
             caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, networkResponse.clone());
+              cache.put(event.request, responseClone);
             });
           }
-        }).catch(() => {
-          // Ignore network errors when offline
-        });
-        return cachedResponse;
-      }
-
-      // If not in cache, fetch from network and store for offline use
-      return fetch(event.request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
           return networkResponse;
+        })
+        .catch(() => {
+          return caches.match('./index.html').then((fallback) => fallback || caches.match('./'));
+        })
+    );
+    return;
+  }
+
+  // 2. Static Assets (CSS, JS, Images, Audio): Cache-First with Stale-While-Revalidate
+  event.respondWith(
+    caches.match(event.request).then((cachedResponse) => {
+      const fetchPromise = fetch(event.request).then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
         }
-        const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
         return networkResponse;
       }).catch(() => {
-        // Fallback for navigation requests
-        if (event.request.mode === 'navigate') {
-          return caches.match('./index.html');
-        }
+        // Offline: network error is expected, ignore
       });
+
+      return cachedResponse || fetchPromise;
     })
   );
 });

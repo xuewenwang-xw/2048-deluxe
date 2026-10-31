@@ -7,7 +7,7 @@
 
 import { GameEngine } from './engine/game_engine.js';
 import { GameView, calculateMoveTransitions } from './ui/view.js';
-import { InputController } from './ui/input.js?v=2.3';
+import { InputController } from './ui/input.js?v=2.5';
 import { ThemeController } from './ui/theme.js';
 import { StorageAdapter } from './ui/storage.js';
 import { AudioEngine } from './audio/audio_engine.js';

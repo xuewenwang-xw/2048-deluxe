@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>2048 Deluxe — Cyber & Retro Edition</title>
-  <link rel="stylesheet" href="style.css?v=2.3">
+  <link rel="stylesheet" href="style.css?v=2.5">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#faf8ef">
   <meta name="mobile-web-app-capable" content="yes">
@@ -164,11 +164,31 @@
     </footer>
   </div>
 
-  <script type="module" src="src/app.js?v=2.3"></script>
+  <script type="module" src="src/app.js?v=2.5"></script>
   <script>
     if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(() => {});
+        navigator.serviceWorker.register('./sw.js?v=2.5').then((reg) => {
+          reg.update();
+          reg.onupdatefound = () => {
+            const worker = reg.installing;
+            if (worker) {
+              worker.onstatechange = () => {
+                if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+                  window.location.reload();
+                }
+              };
+            }
+          };
+        }).catch(() => {});
+
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!refreshing) {
+            refreshing = true;
+            window.location.reload();
+          }
+        });
       });
     }
   </script>
