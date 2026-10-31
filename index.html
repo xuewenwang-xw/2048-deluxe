@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="cyberpunk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>2048 Deluxe — Cyber & Retro Edition</title>
+  <link rel="stylesheet" href="style.css?v=2.2">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#faf8ef">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="2048 豪华版">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>">
+</head>
+<body>
+  <div class="app-root">
+    <!-- Header with Branding, Stats Badges, and Action Controls -->
+    <header class="game-header">
+      <div class="header-top">
+        <div class="brand-group">
+          <h1 class="game-title">2048 <span class="badge-edition">DELUXE</span></h1>
+          <p class="game-subtitle">Join the numbers and reach the <strong>2048 tile!</strong></p>
+        </div>
+
+        <div class="stats-container">
+          <div class="stat-box" id="score-box" aria-label="Current Score">
+            <span class="stat-label">SCORE</span>
+            <span class="stat-value" id="score-val">0</span>
+            <div class="score-addition-container" id="score-addition"></div>
+          </div>
+          <div class="stat-box" id="best-box" aria-label="Best Score">
+            <span class="stat-label">BEST</span>
+            <span class="stat-value" id="best-score-val">0</span>
+          </div>
+          <div class="stat-box" id="moves-box" aria-label="Moves Count">
+            <span class="stat-label">MOVES</span>
+            <span class="stat-value" id="move-count-val">0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-bottom">
+        <div class="controls-toolbar">
+          <button class="btn btn-primary" id="btn-restart" title="Start new game (R)">New Game</button>
+          <button class="btn btn-secondary" id="btn-undo" title="Undo last move (Ctrl+Z)" disabled>Undo</button>
+          <div class="theme-select-wrapper">
+            <select class="select-theme" id="select-theme" aria-label="Select Theme">
+              <option value="cyberpunk">Cyberpunk Neon</option>
+              <option value="retro">Retro CRT Amber</option>
+              <option value="dark">Minimal OLED Dark</option>
+              <option value="pastel">Pastel Warm</option>
+            </select>
+          </div>
+          <div class="volume-control-group">
+            <button class="btn btn-icon" id="btn-audio-toggle" aria-label="Toggle Audio" title="Toggle Sound (M)">
+              <span class="icon-audio" id="audio-icon">🔊</span>
+            </button>
+            <input type="range" class="volume-slider" id="volume-slider" min="0" max="100" value="85" tabindex="-1" aria-label="Volume Slider" title="Adjust Volume">
+            <span class="volume-val-display" id="volume-val-display" aria-hidden="true">85%</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Game Playfield -->
+    <main class="game-wrapper">
+      <div class="game-container" id="game-container">
+        <!-- Background 4x4 Grid Cells -->
+        <div class="grid-container" id="grid-container" aria-hidden="true">
+          <div class="grid-cell" data-row="0" data-col="0"></div>
+          <div class="grid-cell" data-row="0" data-col="1"></div>
+          <div class="grid-cell" data-row="0" data-col="2"></div>
+          <div class="grid-cell" data-row="0" data-col="3"></div>
+          <div class="grid-cell" data-row="1" data-col="0"></div>
+          <div class="grid-cell" data-row="1" data-col="1"></div>
+          <div class="grid-cell" data-row="1" data-col="2"></div>
+          <div class="grid-cell" data-row="1" data-col="3"></div>
+          <div class="grid-cell" data-row="2" data-col="0"></div>
+          <div class="grid-cell" data-row="2" data-col="1"></div>
+          <div class="grid-cell" data-row="2" data-col="2"></div>
+          <div class="grid-cell" data-row="2" data-col="3"></div>
+          <div class="grid-cell" data-row="3" data-col="0"></div>
+          <div class="grid-cell" data-row="3" data-col="1"></div>
+          <div class="grid-cell" data-row="3" data-col="2"></div>
+          <div class="grid-cell" data-row="3" data-col="3"></div>
+        </div>
+
+        <!-- Foreground Dynamic Tile Layer -->
+        <div class="tile-container" id="tile-container" aria-live="polite"></div>
+
+        <!-- Particle Canvas overlay for Milestone 3 sparks & confetti -->
+        <canvas class="particle-canvas" id="particle-canvas"></canvas>
+
+        <!-- Floating Combos and Juice Badges -->
+        <div class="floating-juice-container" id="floating-juice-container"></div>
+
+        <!-- Modal Dialog Overlays -->
+        <div class="modal-overlay hidden" id="modal-overlay">
+          <!-- Game Won Dialog -->
+          <div class="modal-dialog hidden" id="modal-win" role="dialog" aria-modal="true" aria-labelledby="modal-win-title">
+            <h2 class="modal-title" id="modal-win-title">You Win! 🎉</h2>
+            <p class="modal-desc">You've reached the legendary <strong>2048</strong> tile!</p>
+            <div class="modal-actions">
+              <button class="btn btn-primary" id="btn-keep-going">Keep Going</button>
+              <button class="btn btn-secondary" id="btn-win-restart">Play Again</button>
+            </div>
+          </div>
+
+          <!-- Game Over Dialog -->
+          <div class="modal-dialog hidden" id="modal-gameover" role="dialog" aria-modal="true" aria-labelledby="modal-gameover-title">
+            <h2 class="modal-title" id="modal-gameover-title">Game Over! 💀</h2>
+            <p class="modal-desc">No more valid moves remaining on the board.</p>
+            <div class="modal-actions">
+              <button class="btn btn-primary" id="btn-gameover-restart">Try Again</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- On-Screen Virtual D-Pad for Mouse, Mobile & Accessibility -->
+      <section class="dpad-container" aria-label="Directional Controls">
+        <div class="dpad-title" aria-hidden="true">方向控制</div>
+        <button class="dpad-btn dpad-up" id="dpad-up" aria-label="Move Up" data-direction="UP" title="Move Up (▲ / W)">▲</button>
+        <div class="dpad-horizontal">
+          <button class="dpad-btn dpad-left" id="dpad-left" aria-label="Move Left" data-direction="LEFT" title="Move Left (◀ / A)">◀</button>
+          <div class="dpad-center" aria-hidden="true">●</div>
+          <button class="dpad-btn dpad-right" id="dpad-right" aria-label="Move Right" data-direction="RIGHT" title="Move Right (▶ / D)">▶</button>
+        </div>
+        <button class="dpad-btn dpad-down" id="dpad-down" aria-label="Move Down" data-direction="DOWN" title="Move Down (▼ / S)">▼</button>
+        <div class="dpad-hints" aria-hidden="true">
+          <span class="key-hint">▲▼◀▶</span> <span class="key-hint">WASD</span>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer Instructions -->
+    <footer class="game-footer">
+      <p class="instructions-text">
+        <span class="key-hint">▲ ▼ ◀ ▶</span> or <span class="key-hint">W A S D</span> to slide.
+        Swipe on mobile. <span class="key-hint">Ctrl+Z</span> Undo. <span class="key-hint">R</span> Restart.
+      </p>
+    </footer>
+  </div>
+
+  <script type="module" src="src/app.js?v=2.2"></script>
+  <script>
+    if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>
